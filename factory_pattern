@@ -1,0 +1,58 @@
+import pdfplumber
+import os
+
+class ReadFiles:
+    folder: list
+    def __init__(self, folder):
+        self.folder = folder
+        print(self.folder)
+        return
+    
+    def filename(self):
+        """
+        Reading files names which are only of PDF file formats. 
+        """
+        fullname: list
+        for folder, sub_folder, files in os.walk(self.folder):
+            fullname = [os.path.join(
+                                folder, names) 
+                                    for names in files 
+                                        if names.endswith(".pdf")]
+        return fullname
+
+class InfoExtract:
+    """
+    Reading the PDF files provided in the ReadFiles
+    """
+    def __init__(self, all_names):
+        self.all_names = all_names
+        return
+    
+    def name_split(self):
+        """
+        Return the full_path of the file and filename of the file.
+        """
+        path_name: str
+        name: str
+        name_called = []
+
+        for fullname in self.all_names:
+            path_name, name = fullname, str(os.path.split(fullname)[-1]).split(".")[0]
+            name_called.append([path_name, name])
+        return name_called
+
+    def extract(self):
+        single_name: list
+        single_name = self.name_split()
+        
+        for path_name, name in single_name:
+            with open(os.path.join(os.path.split(path_name)[0], name+".txt"), "w") as fyle:
+                with pdfplumber.open(path_name) as pdf:
+                    for number, page in enumerate(pdf.pages, 1):
+                        print('--- page', number, '---')
+                        text = page.extract_text()
+                        fyle.write(text)
+
+rd = ReadFiles(os.getcwd())
+info = InfoExtract(rd.filename())
+info.extract()
